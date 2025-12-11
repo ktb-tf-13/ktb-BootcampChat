@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -120,12 +121,15 @@ public class RoomLeaveHandler {
             return;
         }
         
-        var participantList = roomOpt.get()
-                .getParticipantIds()
+        Room room = roomOpt.get();
+        Map<String, User> participantsById = new HashMap<>();
+        userRepository.findByIdIn(room.getParticipantIds())
+                .forEach(user -> participantsById.put(user.getId(), user));
+
+        var participantList = room.getParticipantIds()
                 .stream()
-                .map(userRepository::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .map(participantsById::get)
+                .filter(Objects::nonNull)
                 .map(UserResponse::from)
                 .toList();
         
